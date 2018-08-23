@@ -1,3 +1,11 @@
+/**
+ * minimal demo of parser combinators, possibly as a target for recent
+ * JS web dev graduates to implement as an exercise.
+ *
+ * huge credit to Hutton, Meijer, and Swierstra for several papers
+ * on the subject.
+ */
+
 class Parser {
 
     // :: (String -> { result: a, remaining: String }) -> Parser a
