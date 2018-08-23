@@ -1,6 +1,6 @@
 class Parser {
 
-    // :: String -> { result: *, remaining: String }
+    // :: (String -> { result: a, remaining: String }) -> Parser a
     constructor (parser) {
         this._parser = parser
     }
