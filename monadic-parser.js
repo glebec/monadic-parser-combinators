@@ -1,8 +1,8 @@
 /**
- * minimal demo of parser combinators, possibly as a target for recent
+ * Minimal demo of parser combinators, possibly as a target for recent
  * JS web dev graduates to implement as an exercise.
  *
- * huge credit to Hutton, Meijer, and Swierstra for several papers
+ * Huge credit to Hutton, Meijer, and Swierstra for their papers
  * on the subject.
  */
 
@@ -19,7 +19,7 @@ class Parser {
     }
 
     // :: String -> Parser String
-    static lit (string) {
+    static literal (string) {
         return new Parser(tokens => {
             const match = tokens.slice(0, string.length)
             if (match !== string) return null
@@ -84,17 +84,17 @@ class Parser {
     }
 
     // :: Parser a ~> Parser b -> Parser b
-    useR (p2) {
+    useRight (p2) {
         return this.chain(() => p2)
     }
 
     // :: Parser a ~> Parser b -> Parser a
-    useL (p2) {
+    useLeft (p2) {
         return this.chain(left => p2.chain(() => Parser.of(left)))
     }
 
     // :: Parser a ~> (* -> Parser b) -> Parser b
-    useRz (mkP2) { // laZy version (thunked)
+    useRightZ (mkP2) { // laZy version (thunked)
         return this.chain(mkP2)
     }
 }
@@ -106,56 +106,77 @@ const P = Parser
  */
 
 const DIGIT = // :: Parser Number
-    P.any(...'0123456789'.split('').map(P.lit))
+    P.any(...'0123456789'.split('').map(P.literal))
 
 const SPACE = // :: Parser String
-    P.many0(P.lit(' '))
+    P.many0(P.literal(' '))
 
 const NUM = // :: Parser Number
-    P.many1(DIGIT).map(nums => +nums.join(''))
+    P.many1(DIGIT)
+    .map(nums => +nums.join(''))
 
 const FACTOR = // :: Parser Number
     P.any(
-        P.lit('(').useR(SPACE).useRz(() => EXPR).useL(SPACE).useL(P.lit(')')),
-        P.lit('-').useRz(() => FACTOR).map(n => -n),
+        P.literal('(')
+        .useRight(SPACE)
+        .useRightZ(() => EXPR)
+        .useLeft(SPACE)
+        .useLeft(P.literal(')')),
+
+        P.literal('-')
+        .useRightZ(() => FACTOR)
+        .map(n => -n),
+
         NUM
     )
 
 const F2 = // :: Parser Number
     P.any(
-        SPACE.useR(P.lit('*')).useR(SPACE).useR(
-            FACTOR.chain(n1 =>
-            F2.map(n2 =>
-            n1 * n2))),
-        SPACE.useR(P.lit('/')).useR(SPACE).useR(
-            FACTOR.chain(n1 =>
-            F2.map(n2 =>
-            1/n1 * n2))),
+        SPACE
+        .useRight(P.literal('*'))
+        .useRight(SPACE)
+        .useRight(FACTOR
+        .chain(n1 => F2
+        .map(n2 => n1 * n2))),
+
+        SPACE
+        .useRight(P.literal('/'))
+        .useRight(SPACE)
+        .useRight(FACTOR
+        .chain(n1 => F2
+        .map(n2 => 1/n1 * n2))),
+
         P.of(1)
     )
 
 const TERM = // :: Parser Number
-    FACTOR.chain(n1 =>
-    F2.map(n2 =>
-    n1 * n2))
+    FACTOR
+    .chain(n1 => F2
+    .map(n2 => n1 * n2))
 
 const T2 = // :: Parser Number
     P.any(
-        SPACE.useR(P.lit('+')).useR(SPACE).useR(
-            TERM.chain(n1 =>
-            T2.map(n2 =>
-            n1 + n2))),
-        SPACE.useR(P.lit('-')).useR(SPACE).useR(
-            TERM.chain(n1 =>
-            T2.map(n2 =>
-            -n1 + n2))),
+        SPACE
+        .useRight(P.literal('+'))
+        .useRight(SPACE)
+        .useRight(TERM
+        .chain(n1 => T2
+        .map(n2 => n1 + n2))),
+
+        SPACE
+        .useRight(P.literal('-'))
+        .useRight(SPACE)
+        .useRight(TERM
+        .chain(n1 => T2
+        .map(n2 => -n1 + n2))),
+
         P.of(0)
     )
 
 const EXPR = // :: Parser Number
-    TERM.chain(n1 =>
-    T2.map(n2 =>
-    n1 + n2))
+    TERM
+    .chain(n1 => T2
+    .map(n2 => n1 + n2))
 
 const res = EXPR.parse('-5 * -(4 + -2) / (0 + 5) - 3 * 2 is pretty cool')
 console.log(res.result) // -4
