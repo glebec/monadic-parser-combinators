@@ -32,9 +32,6 @@ class Parser {
 
     // :: Parser a ~> Parser b -> Parser a | b
     or (p2) {
-        if (!(p2 instanceof Parser)) {
-            throw TypeError('second parser must be, uh, a parser')
-        }
         const p1 = this
         return new Parser(tokens => p1.parse(tokens) || p2.parse(tokens))
     }
