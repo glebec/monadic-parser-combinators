@@ -32,8 +32,7 @@ class Parser {
 
     // :: Parser a ~> Parser b -> Parser a | b
     or (p2) {
-        const p1 = this
-        return new Parser(tokens => p1.parse(tokens) || p2.parse(tokens))
+        return new Parser(tokens => this.parse(tokens) || p2.parse(tokens))
     }
 
     // :: ...Parser * -> Parser *
@@ -106,23 +105,23 @@ const P = Parser
  * Demonstration using math expressions
  */
 
-const DIGIT =
+const DIGIT = // :: Parser Number
     P.any(...'0123456789'.split('').map(P.lit))
 
-const SPACE =
+const SPACE = // :: Parser String
     P.many0(P.lit(' '))
 
-const NUM =
+const NUM = // :: Parser Number
     P.many1(DIGIT).map(nums => +nums.join(''))
 
-const FACTOR =
+const FACTOR = // :: Parser Number
     P.any(
         P.lit('(').useR(SPACE).useRz(() => EXPR).useL(SPACE).useL(P.lit(')')),
         P.lit('-').useRz(() => FACTOR).map(n => -n),
         NUM
     )
 
-const F2 =
+const F2 = // :: Parser Number
     P.any(
         SPACE.useR(P.lit('*')).useR(SPACE).useR(
             FACTOR.chain(n1 =>
@@ -135,12 +134,12 @@ const F2 =
         P.of(1)
     )
 
-const TERM =
+const TERM = // :: Parser Number
     FACTOR.chain(n1 =>
     F2.map(n2 =>
     n1 * n2))
 
-const T2 =
+const T2 = // :: Parser Number
     P.any(
         SPACE.useR(P.lit('+')).useR(SPACE).useR(
             TERM.chain(n1 =>
@@ -153,7 +152,7 @@ const T2 =
         P.of(0)
     )
 
-const EXPR =
+const EXPR = // :: Parser Number
     TERM.chain(n1 =>
     T2.map(n2 =>
     n1 + n2))
