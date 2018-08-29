@@ -30,7 +30,7 @@ class Parser {
         })
     }
 
-    // :: Parser a ~> Parser b -> Parser a | b
+    // :: Parser a ~> Parser b -> Parser (a | b)
     or (p2) {
         return new Parser(tokens => this.parse(tokens) || p2.parse(tokens))
     }
