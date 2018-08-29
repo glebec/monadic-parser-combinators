@@ -30,7 +30,7 @@ class Parser {
         })
     }
 
-    // :: Parser a ~> Parser b -> Parser (a ∪ b)
+    // :: Parser a ~> Parser b -> Parser a | b
     or (p2) {
         return new Parser(tokens => this.parse(tokens) || p2.parse(tokens))
     }
@@ -38,6 +38,11 @@ class Parser {
     // :: ...Parser * -> Parser *
     static any (...ps) {
         return ps.reduce((anyP, p) => anyP.or(p))
+    }
+
+    // :: (* -> Parser a) -> Parser a
+    static lazy (mkParser) {
+        return new Parser(tokens => mkParser().parse(tokens))
     }
 
     // OK here comes the monad stuff…
@@ -92,11 +97,6 @@ class Parser {
     useLeft (p2) {
         return this.chain(left => p2.chain(() => Parser.of(left)))
     }
-
-    // :: Parser a ~> (* -> Parser b) -> Parser b
-    useRightZ (mkP2) { // laZy version (thunked)
-        return this.chain(mkP2)
-    }
 }
 
 const P = Parser
@@ -119,12 +119,12 @@ const FACTOR = // :: Parser Number
     P.any(
         P.literal('(')
         .useRight(SPACE)
-        .useRightZ(() => EXPR)
+        .useRight(P.lazy(() => EXPR))
         .useLeft(SPACE)
         .useLeft(P.literal(')')),
 
         P.literal('-')
-        .useRightZ(() => FACTOR)
+        .useRight(P.lazy(() => FACTOR))
         .map(n => -n),
 
         NUM
