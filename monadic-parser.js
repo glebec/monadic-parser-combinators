@@ -8,12 +8,12 @@
 
 class Parser {
 
-    // :: (String -> { result: a, remaining: String }) -> Parser a
+    // :: (String -> { result: a, remaining: String } | Null) -> Parser a
     constructor (parser) {
         this._parser = parser
     }
 
-    // :: Parser a ~> String -> { result: a, remaining: String }
+    // :: Parser a ~> String -> { result: a, remaining: String } | Null
     parse (string) {
         return this._parser(string)
     }
