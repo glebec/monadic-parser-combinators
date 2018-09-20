@@ -21,11 +21,10 @@ class Parser {
     // :: String -> Parser String
     static literal (string) {
         return new Parser(tokens => {
-            const match = tokens.slice(0, string.length)
-            if (match !== string) return null
+            if (!tokens.startsWith(string)) return null
             return {
-                result: match,
-                remaining: tokens.slice(match.length),
+                result: string,
+                remaining: tokens.slice(string.length),
             }
         })
     }
