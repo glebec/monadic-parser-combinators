@@ -9,18 +9,23 @@
 class Parser {
 
     // :: (String -> { result: a, remaining: String } | Null) -> Parser a
-    constructor (parser) {
-        this._parser = parser
+    constructor (parserFn) {
+        this._parserFn = parserFn
+    }
+
+    // :: (String -> { result: a, remaining: String } | Null) -> Parser a
+    static from (parserFn) {
+        return new Parser(parserFn)
     }
 
     // :: Parser a ~> String -> { result: a, remaining: String } | Null
     parse (string) {
-        return this._parser(string)
+        return this._parserFn(string)
     }
 
     // :: String -> Parser String
     static literal (string) {
-        return new Parser(tokens => {
+        return Parser.from(tokens => {
             if (!tokens.startsWith(string)) return null
             return {
                 result: string,
@@ -31,7 +36,7 @@ class Parser {
 
     // :: Parser a ~> Parser b -> Parser (a | b)
     or (p2) {
-        return new Parser(tokens => this.parse(tokens) || p2.parse(tokens))
+        return Parser.from(tokens => this.parse(tokens) || p2.parse(tokens))
     }
 
     // :: ...Parser * -> Parser *
@@ -41,14 +46,12 @@ class Parser {
 
     // :: (* -> Parser a) -> Parser a
     static lazy (mkParser) {
-        return new Parser(tokens => mkParser().parse(tokens))
+        return Parser.from(tokens => mkParser().parse(tokens))
     }
-
-    // OK here comes the monad stuff…
 
     // :: a -> Parser a
     static of (value) { // aka unit, pure, return, inject
-        return new Parser(string => ({
+        return Parser.from(string => ({
             result: value,
             remaining: string,
         }))
@@ -56,7 +59,7 @@ class Parser {
 
     // :: Parser a ~> (a -> Parser b) -> Parser b
     chain (step) { // aka bind, then, flatMap
-        return new Parser(tokens => {
+        return Parser.from(tokens => {
             const res1 = this.parse(tokens)
             if (!res1) return null
             const p2 = step(res1.result)
@@ -134,16 +137,16 @@ const F2 = // :: Parser Number
         SPACE
         .useRight(P.literal('*'))
         .useRight(SPACE)
-        .useRight(FACTOR
+        .useRight(FACTOR)
         .chain(n1 => F2
-        .map(n2 => n1 * n2))),
+        .map(n2 => n1 * n2)),
 
         SPACE
         .useRight(P.literal('/'))
         .useRight(SPACE)
-        .useRight(FACTOR
+        .useRight(FACTOR)
         .chain(n1 => F2
-        .map(n2 => 1/n1 * n2))),
+        .map(n2 => 1/n1 * n2)),
 
         P.of(1)
     )
@@ -158,16 +161,16 @@ const T2 = // :: Parser Number
         SPACE
         .useRight(P.literal('+'))
         .useRight(SPACE)
-        .useRight(TERM
+        .useRight(TERM)
         .chain(n1 => T2
-        .map(n2 => n1 + n2))),
+        .map(n2 => n1 + n2)),
 
         SPACE
         .useRight(P.literal('-'))
         .useRight(SPACE)
-        .useRight(TERM
+        .useRight(TERM)
         .chain(n1 => T2
-        .map(n2 => -n1 + n2))),
+        .map(n2 => -n1 + n2)),
 
         P.of(0)
     )
@@ -177,5 +180,5 @@ const EXPR = // :: Parser Number
     .chain(n1 => T2
     .map(n2 => n1 + n2))
 
-const res = EXPR.parse('-5 * -(4 + -2) / (0 + 5) - 3 * 2 is pretty cool')
-console.log(res.result) // -4
+const { result } = EXPR.parse('-5 * -(4 + -2) / (0 + 5) - 3 * 2 is pretty cool')
+console.log(result) // -4
