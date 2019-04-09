@@ -8,17 +8,17 @@
 
 class Parser {
 
-    // :: (String -> { result: a, remaining: String } | Null) -> Parser a
+    // :: (String -> { result: a, remainder: String } | Null) -> Parser a
     constructor (parserFn) {
         this._parserFn = parserFn
     }
 
-    // :: (String -> { result: a, remaining: String } | Null) -> Parser a
+    // :: (String -> { result: a, remainder: String } | Null) -> Parser a
     static from (parserFn) {
         return new Parser(parserFn)
     }
 
-    // :: Parser a ~> String -> { result: a, remaining: String } | Null
+    // :: Parser a ~> String -> { result: a, remainder: String } | Null
     parse (string) {
         return this._parserFn(string)
     }
@@ -29,7 +29,7 @@ class Parser {
             if (!tokens.startsWith(string)) return null
             return {
                 result: string,
-                remaining: tokens.slice(string.length),
+                remainder: tokens.slice(string.length),
             }
         })
     }
@@ -53,7 +53,7 @@ class Parser {
     static of (value) { // aka unit, pure, return, inject
         return Parser.from(string => ({
             result: value,
-            remaining: string,
+            remainder: string,
         }))
     }
 
@@ -63,7 +63,7 @@ class Parser {
             const res1 = this.parse(tokens)
             if (!res1) return null
             const p2 = step(res1.result)
-            return p2.parse(res1.remaining)
+            return p2.parse(res1.remainder)
         })
     }
 
@@ -101,84 +101,4 @@ class Parser {
     }
 }
 
-const P = Parser
-
-/**
- * Demonstration using math expressions
- */
-
-const DIGIT = // :: Parser Number
-    P.any(...'0123456789'.split('').map(P.literal))
-
-const SPACE = // :: Parser String
-    P.many0(P.literal(' '))
-
-const NUM = // :: Parser Number
-    P.many1(DIGIT)
-    .map(nums => +nums.join(''))
-
-const FACTOR = // :: Parser Number
-    P.any(
-        P.literal('(')
-        .useRight(SPACE)
-        .useRight(P.lazy(() => EXPR))
-        .useLeft(SPACE)
-        .useLeft(P.literal(')')),
-
-        P.literal('-')
-        .useRight(P.lazy(() => FACTOR))
-        .map(n => -n),
-
-        NUM
-    )
-
-const F2 = // :: Parser Number
-    P.any(
-        SPACE
-        .useRight(P.literal('*'))
-        .useRight(SPACE)
-        .useRight(FACTOR)
-        .chain(n1 => F2
-        .map(n2 => n1 * n2)),
-
-        SPACE
-        .useRight(P.literal('/'))
-        .useRight(SPACE)
-        .useRight(FACTOR)
-        .chain(n1 => F2
-        .map(n2 => 1/n1 * n2)),
-
-        P.of(1)
-    )
-
-const TERM = // :: Parser Number
-    FACTOR
-    .chain(n1 => F2
-    .map(n2 => n1 * n2))
-
-const T2 = // :: Parser Number
-    P.any(
-        SPACE
-        .useRight(P.literal('+'))
-        .useRight(SPACE)
-        .useRight(TERM)
-        .chain(n1 => T2
-        .map(n2 => n1 + n2)),
-
-        SPACE
-        .useRight(P.literal('-'))
-        .useRight(SPACE)
-        .useRight(TERM)
-        .chain(n1 => T2
-        .map(n2 => -n1 + n2)),
-
-        P.of(0)
-    )
-
-const EXPR = // :: Parser Number
-    TERM
-    .chain(n1 => T2
-    .map(n2 => n1 + n2))
-
-const { result } = EXPR.parse('-5 * -(4 + -2) / (0 + 5) - 3 * 2 is pretty cool')
-console.log(result) // -4
+module.exports = Parser
