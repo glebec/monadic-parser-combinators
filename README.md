@@ -1,4 +1,4 @@
-# Monadic Parser Demo
+# Monadic Parser Combinators Demo
 
 Originally a [gist](https://gist.github.com/glebec/572196e2ca30d9afe09c38b4e9d2b227).
 
