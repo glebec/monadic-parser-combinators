@@ -222,7 +222,7 @@ Sequence two parsers, keep the first result:
 const skyward =
     Go.or(Look)
     .chain(act =>
-        Up.chain(_ => P.of(act))) // nest chain to keep `act` in scope
+        Up.map(_ => act)) // nest map to keep `act` in scope
 
 skyward.parse('LookDown') // null
 skyward.parse('LookUp')   // { result: 'Look', remainder: '' }
@@ -236,12 +236,12 @@ const doubleDirection =
     Up.or(Down)
     .chain(d1 =>
         Up.or(Down)
-        .chain(d2 =>
-            P.of(d1 + '&' + d2)))
+        .chain(d2 => // nest chain to keep `d1` in scope
+            P.of(d1 + ' & ' + d2))) // use `of` to hard-code final result
 
 doubleDirection.parse('Upwards')    // null
-doubleDirection.parse('UpUp')       // { result: 'Up&Up', remainder: '' }
-doubleDirection.parse('DownUpDown') // { result: 'Down&Up', remainder: 'Down' }
+doubleDirection.parse('UpUp')       // { result: 'Up & Up', remainder: '' }
+doubleDirection.parse('DownUpDown') // { result: 'Down & Up', remainder: 'Down' }
 ```
 
 Use previous parsers to dynamically decide next parser(s), while applying transformations:
