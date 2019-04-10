@@ -250,7 +250,7 @@ Use previous parsers to dynamically decide next parser(s), while applying transf
 const flyThenLand =
     Up.or(Down) // must match one, else stop the chain
     .chain(d => (d === 'Up') // which one matched?
-        ? flyThenLand.chain(h => 1 + h) // continue the chain
+        ? flyThenLand.map(h => 1 + h) // continue the chain
         : P.of(0)) // end the chain successfully
 
 flyThenLand.parse('Down.') // { result: 0, remainder: '.' }
